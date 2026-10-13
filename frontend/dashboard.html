@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATS AI Resume Ranker - Dashboard</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 24px;
+            background: #f8fafc;
+            margin: 0;
+            color: #1e293b;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header .badge-ai {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+            color: white;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .top {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            flex: 1;
+            min-width: 320px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+            border: 1px solid #e2e8f0;
+        }
+        .card h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            font-size: 18px;
+            color: #334155;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #475569;
+            margin-bottom: 4px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #1d4ed8;
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #cbd5e1;
+            width: auto;
+            display: inline-block;
+            padding: 6px 14px;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .status-msg {
+            font-size: 13px;
+            margin-top: 8px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            display: none;
+        }
+        .status-success {
+            display: block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .status-error {
+            display: block;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+        table {
+            width: 100%;
+            margin-top: 16px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            font-size: 14px;
+            vertical-align: top;
+        }
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            border-top: 1px solid #e2e8f0;
+        }
+        .score-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .score-high { background: #dcfce7; color: #15803d; }
+        .score-mid  { background: #fef9c3; color: #a16207; }
+        .score-low  { background: #fee2e2; color: #b91c1c; }
+        
+        .rec-tag {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 4px;
+        }
+        .rec-strong { background: #dcfce7; color: #166534; }
+        .rec-moderate { background: #fef3c7; color: #92400e; }
+        .rec-low { background: #fee2e2; color: #991b1b; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        .badge-matched { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+        .badge-missing { background: #f1f5f9; color: #64748b; text-decoration: line-through; border: 1px solid #e2e8f0; }
+        .badge-meta { background: #f1f5f9; color: #334155; font-size: 11px; font-weight: 600; padding: 2px 6px; border-radius: 4px; }
+        
+        .ai-summary-box {
+            background: #f8fafc;
+            border-left: 3px solid #3b82f6;
+            padding: 8px 12px;
+            border-radius: 0 6px 6px 0;
+            font-size: 13px;
+            color: #334155;
+            line-height: 1.4;
+            margin-top: 6px;
+        }
+        .empty-row {
+            text-align: center;
+            color: #94a3b8;
+            padding: 32px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>
+            ATS AI Resume Ranker 
+            <span class="badge-ai">Semantic AI Enabled</span>
+        </h1>
+        <a href="index.html" style="font-size: 14px; color: #64748b; text-decoration: none;">Log Out</a>
+    </div>
+
+    <div class="top">
+        <div class="card">
+            <h3>1. Create Job Opening</h3>
+            <label for="jobTitle">Job Title</label>
+            <input type="text" id="jobTitle" placeholder="e.g. Python Backend Engineer">
+            
+            <label for="jobSkills">Required Skills (comma-separated)</label>
+            <input type="text" id="jobSkills" placeholder="e.g. Python, Flask, MySQL, Docker">
+            
+            <button onclick="createJob()">Create Job</button>
+            <div id="jobText" class="status-msg"></div>
+        </div>
+
+        <div class="card">
+            <h3>2. Upload Resumes</h3>
+            <label for="jobSelect">Select Target Job</label>
+            <select id="jobSelect" onchange="onJobChange()">
+                <option value="">Loading jobs...</option>
+            </select>
+
+            <label for="resumeFile">Candidate Resume (PDF)</label>
+            <input type="file" id="resumeFile" accept=".pdf">
+            
+            <button onclick="uploadResume()">Analyze & Rank with AI</button>
+            <div id="uploadResult" class="status-msg"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3 style="margin-bottom: 0;">Ranked Candidates & AI Assessments</h3>
+            <button class="btn-secondary" onclick="loadRankings()">Refresh Table</button>
+        </div>
+
+        <table id="rankTable">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Candidate File</th>
+                    <th style="width: 15%;">Score & Match</th>
+                    <th style="width: 28%;">Skills Analysis</th>
+                    <th style="width: 32%;">AI Recruiter Assessment</th>
+                </tr>
+            </thead>
+            <tbody id="rankBody">
+                <tr><td colspan="4" class="empty-row">Select a job or upload a resume to view rankings</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+        let currentJobId = null;
+
+        window.onload = function() {
+            loadJobs();
+        };
+
+        async function loadJobs() {
+            try {
+                let res = await fetch(`${API_BASE}/jobs`);
+                let jobs = await res.json();
+                let select = document.getElementById('jobSelect');
+                select.innerHTML = '';
+
+                if (!jobs || jobs.length === 0) {
+                    select.innerHTML = '<option value="">No jobs created yet</option>';
+                    return;
+                }
+
+                jobs.forEach((j, index) => {
+                    let opt = document.createElement('option');
+                    opt.value = j.id;
+                    opt.innerText = `Job #${j.id}: ${j.title} (${j.required_skills || 'No skills listed'})`;
+                    select.appendChild(opt);
+                });
+
+                if (!currentJobId && jobs.length > 0) {
+                    currentJobId = jobs[0].id;
+                }
+                select.value = currentJobId;
+                loadRankings();
+            } catch (err) {
+                console.error("Error fetching jobs:", err);
+                document.getElementById('jobSelect').innerHTML = '<option value="">Failed to connect to backend</option>';
+            }
+        }
+
+        function onJobChange() {
+            currentJobId = document.getElementById('jobSelect').value;
+            loadRankings();
+        }
+
+        async function createJob() {
+            let title = document.getElementById('jobTitle').value.trim();
+            let skills = document.getElementById('jobSkills').value.trim();
+            let msgEl = document.getElementById('jobText');
+
+            if (!title) {
+                msgEl.className = 'status-msg status-error';
+                msgEl.innerText = "Please enter a job title.";
+                return;
+            }
+
+            try {
+                let res = await fetch(`${API_BASE}/create-job`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, skills })
+                });
+                let data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Failed to create job");
+                }
+
+                currentJobId = data.job_id;
+                msgEl.className = 'status-msg status-success';
+                msgEl.innerText = `Job created with ID #${data.job_id}: "${data.title}"`;
+                
+                document.getElementById('jobTitle').value = '';
+                document.getElementById('jobSkills').value = '';
+
+                await loadJobs();
+            } catch (err) {
+                console.error("Error creating job:", err);
+                msgEl.className = 'status-msg status-error';
+                msgEl.innerText = `Error: ${err.message || "Ensure Flask backend is running on port 5000"}`;
+            }
+        }
+
+        async function uploadResume() {
+            let fileInput = document.getElementById('resumeFile');
+            let file = fileInput.files[0];
+            let jobId = document.getElementById('jobSelect').value || currentJobId;
+            let msgEl = document.getElementById('uploadResult');
+
+            if (!jobId) {
+                alert("Please select or create a job first.");
+                return;
+            }
+
+            if (!file) {
+                alert("Please select a PDF resume file first.");
+                return;
+            }
+
+            let form = new FormData();
+            form.append('resume', file);
+            form.append('job_id', jobId);
+
+            msgEl.className = 'status-msg';
+            msgEl.style.display = 'block';
+            msgEl.style.background = '#eff6ff';
+            msgEl.style.color = '#1d4ed8';
+            msgEl.style.border = '1px solid #bfdbfe';
+            msgEl.innerText = "Evaluating resume with Semantic AI Engine...";
+
+            try {
+                let res = await fetch(`${API_BASE}/upload-resume`, {
+                    method: 'POST',
+                    body: form
+                });
+                let data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || "Upload failed");
+                }
+
+                msgEl.className = 'status-msg status-success';
+                msgEl.innerText = `Evaluated ${data.file}! ATS Score: ${data.score}% | Match: ${data.recommendation}`;
+
+                fileInput.value = '';
+                loadRankings();
+            } catch (err) {
+                console.error("Error uploading resume:", err);
+                msgEl.className = 'status-msg status-error';
+                msgEl.innerText = `Error: ${err.message || "Failed to upload. Ensure backend is running."}`;
+            }
+        }
+
+        async function loadRankings() {
+            let jobId = document.getElementById('jobSelect').value || currentJobId;
+            let body = document.getElementById('rankBody');
+
+            if (!jobId) {
+                body.innerHTML = '<tr><td colspan="4" class="empty-row">No job selected</td></tr>';
+                return;
+            }
+
+            try {
+                let res = await fetch(`${API_BASE}/rankings/${jobId}`);
+                let data = await res.json();
+
+                if (!data || data.length === 0) {
+                    body.innerHTML = '<tr><td colspan="4" class="empty-row">No resumes uploaded yet for this job</td></tr>';
+                    return;
+                }
+
+                let html = '';
+                data.forEach(r => {
+                    let scoreClass = r.score >= 75 ? 'score-high' : (r.score >= 50 ? 'score-mid' : 'score-low');
+                    
+                    let rec = r.recommendation || (r.score >= 75 ? 'Strong Match' : (r.score >= 50 ? 'Moderate Match' : 'Low Match'));
+                    let recClass = rec.toLowerCase().includes('strong') ? 'rec-strong' : (rec.toLowerCase().includes('moderate') ? 'rec-moderate' : 'rec-low');
+
+                    let matchedBadges = r.matched_skills 
+                        ? r.matched_skills.split(',').map(s => `<span class="badge badge-matched">${s.trim()}</span>`).join(' ')
+                        : '<span style="color:#94a3b8; font-size:12px;">None</span>';
+                        
+                    let missingBadges = r.missing_skills 
+                        ? r.missing_skills.split(',').map(s => `<span class="badge badge-missing">${s.trim()}</span>`).join(' ')
+                        : '<span style="color:#94a3b8; font-size:12px;">None</span>';
+
+                    let expTag = r.experience_detected ? `<span class="badge-meta">Exp: ${r.experience_detected}</span>` : '';
+                    let eduTag = r.education_detected ? `<span class="badge-meta">Edu: ${r.education_detected}</span>` : '';
+                    let summaryText = r.ai_summary || "Evaluation completed.";
+
+                    html += `<tr>
+                        <td>
+                            <strong>${r.file_name}</strong>
+                            <div style="margin-top: 6px; display: flex; gap: 4px; flex-wrap: wrap;">
+                                ${expTag}
+                                ${eduTag}
+                            </div>
+                        </td>
+                        <td>
+                            <div><span class="score-pill ${scoreClass}">${r.score}%</span></div>
+                            <div><span class="rec-tag ${recClass}">${rec}</span></div>
+                        </td>
+                        <td>
+                            <div style="font-size: 11px; font-weight: 600; color: #0369a1; margin-bottom: 2px;">MATCHED:</div>
+                            <div style="margin-bottom: 8px;">${matchedBadges}</div>
+                            <div style="font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 2px;">MISSING:</div>
+                            <div>${missingBadges}</div>
+                        </td>
+                        <td>
+                            <div class="ai-summary-box">
+                                <strong>AI Summary:</strong> ${summaryText}
+                            </div>
+                        </td>
+                    </tr>`;
+                });
+
+                body.innerHTML = html;
+            } catch (err) {
+                console.error("Error loading rankings:", err);
+                body.innerHTML = '<tr><td colspan="4" class="empty-row" style="color:#ef4444;">Failed to load rankings from backend</td></tr>';
+            }
+        }
+    </script>
+</body>
+</html>

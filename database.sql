@@ -1,3 +1,3 @@
-CREATE TABLE jobs (id INT_INCREMENT PRIMARY KEY, title VARCHAR(255), description TEXT, required_skills TEXT);
-CREATE TABLE resumes (id INT AUTO_INCREMENT PRIMERY KEY,file_name VARCHAR(255), raw_text LONGTEXT);
-CREATE TABLE rankings (id AUTO_INCREMENT PRIMERY KEY, job_id INT, resume_id INT , score INT , matched_skills TEXT , missing_skills TEXT);
+CREATE TABLE jobs (id INT AUTO_INCREMENT PRIMARY KEY, title VARCHAR(255), description TEXT, required_skills TEXT);
+CREATE TABLE resumes (id INT AUTO_INCREMENT PRIMARY KEY,file_name VARCHAR(255), raw_text LONGTEXT , upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE rankings (id INT AUTO_INCREMENT PRIMARY KEY, job_id INT, resume_id INT, score INT, matched_skills TEXT, missing_skills TEXT, ai_summary TEXT, recommendation VARCHAR(50), experience_detected VARCHAR(100), education_detected VARCHAR(100), FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE, FOREIGN KEY (resume_id) REFERENCES resumes(id) ON DELETE CASCADE);

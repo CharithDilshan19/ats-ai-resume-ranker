@@ -1,4 +1,4 @@
 uploads/
-_pycatche_/
+__pycache__/
 venv/
 .env
